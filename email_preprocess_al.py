@@ -4,19 +4,8 @@ from sklearn import cross_validation
 import nltk
 
 
-def preprocess(words_file = "../tools/word_data.pkl", authors_file="../tools/email_authors.pkl"):
-	authors_file_handler = open(authors_file, "rb")
-	authors = pickle.load(authors_file_handler)
-	authors_file_handler.close()
-
-	words_file_handler = open(words_file, "rb")
-	word_data = pickle.load(words_file_handler)
-	words_file_handler.close()
-	### test_size is the percentage of events assigned to the test set
-	### (remainder go into training)
-	features_train, features_test, labels_train, labels_test =\
-		cross_validation.train_test_split(word_data, authors, test_size=0.1, random_state=42)
-
+#http://scikit-learn.org/stable/modules/feature_extraction.html#text-feature-extraction
+#td-idf = tf(t,d) * idf(t)
 
 CORPUS = ['This is the first document.',
 			'This is the second second document.',
@@ -37,15 +26,28 @@ def return_token_data(corpus):
 	return unique_words, all_doc_tokens
 
 
-def return_tdif_data(corpus):
+def return_tf_idf_data(corpus):
 	unique_words, all_doc_tokens = return_token_data(corpus)
 	tdif_array = np.full((len(corpus), len(unique_words)), 0.0)
+	idf_array = np.full(len(unique_words), 0.0)
 
-	for i, doc_tokens in enumerate(all_doc_tokens):
-		for j, token in enumerate(unique_words):
-			tdif_array[i][j] = doc_tokens.count(token)
+	for j, token in enumerate(unique_words):
+		
+		document_frequency = 0
+		for i, doc_tokens in enumerate(all_doc_tokens):
+			
+			if token in doc_tokens:
+				tdif_array[i][j] = doc_tokens.count(token)
+				document_frequency+=1;
+		idf_array[j] = np.log((1+len(corpus))/(1+document_frequency)) + 1
 
+
+	tdif_array = tdif_array * idf_array
 	return tdif_array, unique_words, all_doc_tokens
 	
-print(return_tdif_data(CORPUS))
+
+
+td_idf_data = return_tf_idf_data(CORPUS)
+print(td_idf_data)
+print(CORPUS)
 
