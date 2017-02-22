@@ -26,9 +26,8 @@ def return_token_data(corpus):
 	return unique_words, all_doc_tokens
 
 
-def return_tf_idf_data(corpus):
-	unique_words, all_doc_tokens = return_token_data(corpus)
-	tdif_array = np.full((len(corpus), len(unique_words)), 0.0)
+def return_tf_idf_data(unique_words, all_doc_tokens):
+	tdif_array = np.full((len(all_doc_tokens), len(unique_words)), 0.0)
 	idf_array = np.full(len(unique_words), 0.0)
 
 	for j, token in enumerate(unique_words):
@@ -39,15 +38,26 @@ def return_tf_idf_data(corpus):
 			if token in doc_tokens:
 				tdif_array[i][j] = doc_tokens.count(token)
 				document_frequency+=1;
-		idf_array[j] = np.log((1+len(corpus))/(1+document_frequency)) + 1
+		idf_array[j] = np.log((1+len(all_doc_tokens))/(1+document_frequency)) + 1
 
 
 	tdif_array = tdif_array * idf_array
-	return tdif_array, unique_words, all_doc_tokens
+	return tdif_array
 	
 
+def euclidian_normalize(tdif_row):
+	denominator = ((tdif_row**2).sum())**(1/2)
+	return tdif_row / denominator
 
-td_idf_data = return_tf_idf_data(CORPUS)
-print(td_idf_data)
-print(CORPUS)
 
+
+def my_TfidfVectorizer(corpus):
+	"""Take a corpus, return each document as a set of features
+	"""
+	unique_words, all_doc_tokens = return_token_data(corpus)
+	my_tfidf_array = return_tf_idf_data(unique_words, all_doc_tokens)
+	my_normalized_tfidf = np.apply_along_axis(euclidian_normalize, 1, my_tfidf_array)
+	return my_normalized_tfidf
+
+
+print(my_TfidfVectorizer(CORPUS))
